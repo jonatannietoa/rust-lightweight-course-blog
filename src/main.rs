@@ -7,8 +7,9 @@ use axum::{
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
-use pills::application::find::{FindAllPillsQueryHandler, FindPillQueryHandler};
-use pills::application::{CreatePillCommandHandler, PillRepository};
+use pills::application::command::CreatePillCommandHandler;
+use pills::application::query::{FindAllPillsQueryHandler, FindPillQueryHandler};
+use pills::domain::PillRepository;
 use pills::infrastructure::controllers::create_pill_controller::create_pill_handler;
 use pills::infrastructure::controllers::find_all_pills_controller::find_all_pills_handler;
 use pills::infrastructure::controllers::find_pill_controller::find_pill_by_id_handler;

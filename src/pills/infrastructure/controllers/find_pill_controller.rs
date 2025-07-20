@@ -5,8 +5,7 @@ use axum::{
 };
 use std::sync::Arc;
 
-use crate::pills::application::find::{FindPillQuery, FindPillQueryHandler};
-use crate::pills::application::RepositoryError;
+use crate::pills::application::{FindPillQuery, FindPillQueryHandler, RepositoryError};
 use crate::pills::domain::PillId;
 
 pub async fn find_pill_by_id_handler(

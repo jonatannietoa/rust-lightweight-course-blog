@@ -5,7 +5,7 @@ use axum::{
 };
 use std::sync::Arc;
 
-use crate::pills::application::find::{FindAllPillsQuery, FindAllPillsQueryHandler};
+use crate::pills::application::query::{FindAllPillsQuery, FindAllPillsQueryHandler};
 
 pub async fn find_all_pills_handler(
     State(handler): State<Arc<FindAllPillsQueryHandler>>,

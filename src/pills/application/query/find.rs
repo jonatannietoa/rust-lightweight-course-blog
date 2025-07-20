@@ -1,5 +1,4 @@
-use super::command::{PillRepository, RepositoryError};
-use crate::pills::domain::{Pill, PillId};
+use crate::pills::domain::{Pill, PillId, PillRepository, RepositoryError};
 use std::sync::Arc;
 
 pub struct FindPillQuery {
