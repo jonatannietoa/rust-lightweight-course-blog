@@ -35,7 +35,8 @@ rust-ddd-poc/
         │   │       └── create_pill_command_handler.rs # CreatePillCommandHandler
         │   └── query/                         # Query handlers (read operations)
         │       ├── mod.rs                     # Query module exports
-        │       └── find.rs                    # Find pill query handlers
+        │       ├── find_pill_query_handler.rs # Find single pill query handler
+        │       └── find_all_pills_query_handler.rs # Find all pills query handler
         └── infrastructure/                    # Infrastructure layer (adapters)
             ├── mod.rs                         # Infrastructure module exports
             ├── controllers/                   # HTTP controllers (input adapters)
@@ -60,7 +61,7 @@ rust-ddd-poc/
 - **Commands** (`command/create/`): Write operations with dedicated files
   - `create_pill_command.rs`: Command DTOs/structs
   - `create_pill_command_handler.rs`: Command handlers (use cases)
-- **Queries** (`query/find.rs`): Read operations and query handlers
+- **Queries** (`query/`): Read operations and query handlers in separate files
 - Application-specific errors and validation
 
 **Infrastructure Layer** (`pills/infrastructure/`)
@@ -198,7 +199,8 @@ cargo clippy
 
 ### Query Structure (`src/pills/application/query/`)
 
-- **`find.rs`**: Contains `FindPillQuery`, `FindPillQueryHandler`, `FindAllPillsQuery`, and `FindAllPillsQueryHandler`
+- **`find_pill_query_handler.rs`**: Contains `FindPillQuery` and `FindPillQueryHandler` for single pill retrieval
+- **`find_all_pills_query_handler.rs`**: Contains `FindAllPillsQuery` and `FindAllPillsQueryHandler` for retrieving all pills
 - **`mod.rs`**: Module exports and re-exports for query handlers
 
 ### Domain Structure (`src/pills/domain/`)
@@ -217,7 +219,8 @@ cargo clippy
 
 - **`src/pills/domain/pill.rs`**: Core domain entities (`Pill`, `PillId`) and business logic
 - **`src/pills/domain/pills_repository.rs`**: Repository interface and domain errors
-- **`src/pills/application/query/find.rs`**: Query handlers for finding pills
+- **`src/pills/application/query/find_pill_query_handler.rs`**: Single pill query handler
+- **`src/pills/application/query/find_all_pills_query_handler.rs`**: All pills query handler
 - **`src/pills/infrastructure/in_memory_repository.rs`**: In-memory implementation of `PillRepository`
 - **`src/main.rs`**: Application entry point with dependency injection and server setup
 
@@ -250,8 +253,11 @@ use crate::pills::domain::{Pill, PillId, PillRepository, RepositoryError};
 
 ### Application Layer Imports
 ```rust
-// query/find.rs
+// query/find_pill_query_handler.rs
 use crate::pills::domain::{Pill, PillId, PillRepository, RepositoryError};
+
+// query/find_all_pills_query_handler.rs
+use crate::pills::domain::{Pill, PillRepository, RepositoryError};
 
 // command/create/create_pill_command_handler.rs
 use super::create_pill_command::CreatePillCommand;
@@ -356,11 +362,11 @@ This project implements the Command Query Responsibility Segregation (CQRS) patt
 **Location**: `src/pills/application/query/`
 
 - **Queries**: Data structures representing read intentions
-  - `FindPillQuery`: Contains ID for single pill lookup
-  - `FindAllPillsQuery`: Marker for retrieving all pills
+  - `FindPillQuery`: Contains ID for single pill lookup (in `find_pill_query_handler.rs`)
+  - `FindAllPillsQuery`: Marker for retrieving all pills (in `find_all_pills_query_handler.rs`)
 - **Query Handlers**: Business logic for processing queries
-  - `FindPillQueryHandler`: Retrieves single pill with validation
-  - `FindAllPillsQueryHandler`: Retrieves all pills with logging
+  - `FindPillQueryHandler`: Retrieves single pill with validation (in `find_pill_query_handler.rs`)
+  - `FindAllPillsQueryHandler`: Retrieves all pills with logging (in `find_all_pills_query_handler.rs`)
 - **Flow**: Query → Handler → Repository → Domain
 
 ### CQRS Benefits in This Implementation
@@ -379,7 +385,8 @@ Application Layer
 │       ├── CreatePillCommand (Data)
 │       └── CreatePillCommandHandler (Logic)
 └── query/
-    └── FindPillQuery + Handlers (Data + Logic)
+    ├── find_pill_query_handler.rs (FindPillQuery + Handler)
+    └── find_all_pills_query_handler.rs (FindAllPillsQuery + Handler)
 
 Domain Layer (Shared)
 ├── Pill (Entity)
