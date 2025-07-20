@@ -28,7 +28,7 @@ rust-ddd-poc/
         │   │   ├── mod.rs                     # Command module exports
         │   │   └── create/                    # Create pill command
         │   │       ├── mod.rs                 # Create module exports
-        │   │       ├── command.rs             # CreatePillCommand struct
+        │   │       ├── create_pill_command.rs # CreatePillCommand struct
         │   │       ├── create_pill_command_handler.rs # CreatePillCommandHandler
         │   │       └── repository.rs          # PillRepository trait & errors
         │   └── find.rs                        # Find pill query handlers
@@ -183,7 +183,7 @@ cargo clippy
 
 ### Command Structure (`src/pills/application/command/create/`)
 
-- **`command.rs`**: Contains the `CreatePillCommand` struct with title and content fields
+- **`create_pill_command.rs`**: Contains the `CreatePillCommand` struct with title and content fields
 - **`create_pill_command_handler.rs`**: Contains the `CreatePillCommandHandler` that processes create commands
 - **`repository.rs`**: Contains the `PillRepository` trait and `RepositoryError` enum
 - **`mod.rs`**: Module exports and re-exports for the create command
@@ -238,7 +238,7 @@ use super::command::{PillRepository, RepositoryError};
 use crate::pills::domain::{Pill, PillId};
 
 // create_pill_command_handler.rs
-use super::command::CreatePillCommand;
+use super::create_pill_command::CreatePillCommand;
 use super::repository::{PillRepository, RepositoryError};
 use crate::pills::domain::{Pill, PillId};
 ```

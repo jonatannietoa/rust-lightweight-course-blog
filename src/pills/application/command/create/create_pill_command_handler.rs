@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use super::command::CreatePillCommand;
+use super::create_pill_command::CreatePillCommand;
 use super::repository::{PillRepository, RepositoryError};
 use crate::pills::domain::{Pill, PillId};
 
