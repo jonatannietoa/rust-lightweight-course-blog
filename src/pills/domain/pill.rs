@@ -41,7 +41,7 @@ pub struct Pill {
 }
 
 impl Pill {
-    pub fn new(id: PillId, title: String, content: String) -> Self {
+    pub fn create(id: PillId, title: String, content: String) -> Self {
         Self { id, title, content }
     }
 

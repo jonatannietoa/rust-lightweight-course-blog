@@ -13,7 +13,7 @@ impl FindAllPillsQueryHandler {
     }
 
     pub async fn handle(&self, _query: FindAllPillsQuery) -> Result<Vec<Pill>, RepositoryError> {
-        println!("Handler (FindAll): Buscando todas las píldoras");
+        println!("Handler (FindAll): Searching all pills");
         let pills = self.repository.find_all().await?;
 
         // Use accessor methods to log pill information
