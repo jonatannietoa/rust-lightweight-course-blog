@@ -13,17 +13,7 @@ impl FindAllPillsQueryHandler {
     }
 
     pub async fn handle(&self, _query: FindAllPillsQuery) -> Result<Vec<Pill>, RepositoryError> {
-        println!("Handler (FindAll): Searching all pills");
         let pills = self.repository.find_all().await?;
-
-        for pill in &pills {
-            println!(
-                "Pill found: ID={}, Title='{}', Content='{}'",
-                pill.id(),
-                pill.title(),
-                pill.content()
-            );
-        }
 
         Ok(pills)
     }

@@ -17,8 +17,6 @@ impl CreatePillCommandHandler {
         let pill_id = PillId::new();
         let pill = Pill::create(pill_id, command.title, command.content);
 
-        println!("Handler (Create): Saving pill with ID {}", pill.id());
-
         self.pills_repository.save(&pill).await
     }
 }

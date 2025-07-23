@@ -24,10 +24,7 @@ pub async fn create_pill_handler(
     };
 
     match handler.handle(command).await {
-        Ok(_) => {
-            println!("Pill Controller: Pill created successfully.");
-            StatusCode::CREATED
-        }
+        Ok(_) => StatusCode::CREATED,
         Err(e) => {
             eprintln!("Pill Controller: Error creating pill: {:?}", e);
             StatusCode::INTERNAL_SERVER_ERROR
