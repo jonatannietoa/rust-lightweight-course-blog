@@ -16,7 +16,6 @@ impl FindAllPillsQueryHandler {
         println!("Handler (FindAll): Searching all pills");
         let pills = self.repository.find_all().await?;
 
-        // Use accessor methods to log pill information
         for pill in &pills {
             println!(
                 "Pill found: ID={}, Title='{}', Content='{}'",
