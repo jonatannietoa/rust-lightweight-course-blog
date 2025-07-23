@@ -1,4 +1,4 @@
-# Rust DDD POC - Pills API
+# Rust AI Pills Blog - Pills API
 
 A Rust web API built with Axum framework following Domain-Driven Design (DDD) principles.
 
@@ -15,8 +15,10 @@ This project demonstrates a clean architecture with the following layers:
 ```
 rust-ddd-poc/
 ├── Cargo.toml                                 # Dependencies and project configuration
+├── Cargo.lock                                 # Dependency lock file
 ├── .gitignore                                 # Git ignore file
 ├── README.md                                  # Project documentation
+├── target/                                    # Build artifacts (generated)
 └── src/                                       # Source code
     ├── main.rs                                # Application entry point & DI setup
     └── pills/                                 # Pills bounded context
@@ -74,8 +76,8 @@ rust-ddd-poc/
 
 - **axum**: Web framework for Rust
 - **tokio**: Asynchronous runtime
-- **serde**: Serialization/deserialization
-- **uuid**: UUID generation
+- **serde**: Serialization/deserialization with JSON support
+- **uuid**: UUID generation with v4 and serde features
 - **thiserror**: Error handling
 - **async-trait**: Async traits support
 
