@@ -1,14 +1,27 @@
-# Rust AI Pills Blog - Pills API
+# Rust AI Pills Blog - Pills & Courses API
 
-A Rust web API built with Axum framework following Domain-Driven Design (DDD) principles.
+A Rust web API built with Axum framework following Domain-Driven Design (DDD) principles. Features both Pills and Courses domains with their relationships.
 
 ## Architecture
 
 This project demonstrates a clean architecture with the following layers:
 
-- **Domain**: Core business logic and entities (`Pill`, `PillId`)
+- **Domain**: Core business logic and entities (`Pill`, `PillId`, `Course`, `CourseId`)
 - **Application**: Use cases and command/query handlers
 - **Infrastructure**: External adapters (HTTP controllers, repositories)
+
+## Domains
+
+### Pills Domain
+- **Entities**: `Pill`, `PillId`
+- **Repository**: `PillRepository`
+- **Use Cases**: Create, Find, Find All
+
+### Courses Domain
+- **Entities**: `Course`, `CourseId`
+- **Repository**: `CourseRepository`
+- **Use Cases**: Create, Find, Find All, Add Pills to Course, Find Course with Pills
+- **Relationships**: Course contains multiple Pills (by reference using `PillId`)
 
 ## Project Structure
 
@@ -21,32 +34,65 @@ rust-ddd-poc/
 ├── target/                                    # Build artifacts (generated)
 └── src/                                       # Source code
     ├── main.rs                                # Application entry point & DI setup
-    └── pills/                                 # Pills bounded context
+    ├── pills/                                 # Pills bounded context
+    │   ├── mod.rs                             # Module declarations
+    │   ├── domain/                            # Domain layer
+    │   │   ├── mod.rs                         # Domain module exports
+    │   │   ├── pill.rs                        # Pill entity and PillId value object
+    │   │   └── pills_repository.rs           # PillRepository trait & RepositoryError
+    │   ├── application/                       # Application layer (use cases)
+    │   │   ├── mod.rs                         # Application module exports
+    │   │   ├── command/                       # Command handlers (write operations)
+    │   │   │   ├── mod.rs                     # Command module exports
+    │   │   │   └── create/                    # Create pill command
+    │   │   │       ├── mod.rs                 # Create module exports
+    │   │   │       ├── create_pill_command.rs # CreatePillCommand struct
+    │   │   │       └── create_pill_command_handler.rs # CreatePillCommandHandler
+    │   │   └── query/                         # Query handlers (read operations)
+    │   │       ├── mod.rs                     # Query module exports
+    │   │       ├── find_pill_query_handler.rs # Find single pill query handler
+    │   │       └── find_all_pills_query_handler.rs # Find all pills query handler
+    │   └── infrastructure/                    # Infrastructure layer (adapters)
+    │       ├── mod.rs                         # Infrastructure module exports
+    │       ├── controllers/                   # HTTP controllers (input adapters)
+    │       │   ├── mod.rs                     # Controllers module exports
+    │       │   ├── create_pill_controller.rs  # POST /pills endpoint handler
+    │       │   ├── find_pill_controller.rs    # GET /pills/:id endpoint handler
+    │       │   └── find_all_pills_controller.rs # GET /pills endpoint handler
+    │       └── in_memory_repository.rs        # In-memory repository (output adapter)
+    └── courses/                               # Courses bounded context
         ├── mod.rs                             # Module declarations
         ├── domain/                            # Domain layer
         │   ├── mod.rs                         # Domain module exports
-        │   ├── pill.rs                        # Pill entity and PillId value object
-        │   └── pills_repository.rs           # PillRepository trait & RepositoryError
+        │   ├── course.rs                      # Course entity and CourseId value object
+        │   └── course_repository.rs          # CourseRepository trait & CourseRepositoryError
         ├── application/                       # Application layer (use cases)
         │   ├── mod.rs                         # Application module exports
         │   ├── command/                       # Command handlers (write operations)
         │   │   ├── mod.rs                     # Command module exports
-        │   │   └── create/                    # Create pill command
-        │   │       ├── mod.rs                 # Create module exports
-        │   │       ├── create_pill_command.rs # CreatePillCommand struct
-        │   │       └── create_pill_command_handler.rs # CreatePillCommandHandler
+        │   │   ├── create/                    # Create course command
+        │   │   │   ├── mod.rs                 # Create module exports
+        │   │   │   ├── create_course_command.rs # CreateCourseCommand struct
+        │   │   │   └── create_course_command_handler.rs # CreateCourseCommandHandler
+        │   │   └── add_pill/                  # Add pill to course command
+        │   │       ├── mod.rs                 # Add pill module exports
+        │   │       ├── add_pill_to_course_command.rs # AddPillToCourseCommand struct
+        │   │       └── add_pill_to_course_command_handler.rs # AddPillToCourseCommandHandler
         │   └── query/                         # Query handlers (read operations)
         │       ├── mod.rs                     # Query module exports
-        │       ├── find_pill_query_handler.rs # Find single pill query handler
-        │       └── find_all_pills_query_handler.rs # Find all pills query handler
+        │       ├── find_course_query_handler.rs # Find single course query handler
+        │       ├── find_all_courses_query_handler.rs # Find all courses query handler
+        │       └── find_course_with_pills_query_handler.rs # Find course with pills query handler
         └── infrastructure/                    # Infrastructure layer (adapters)
             ├── mod.rs                         # Infrastructure module exports
             ├── controllers/                   # HTTP controllers (input adapters)
             │   ├── mod.rs                     # Controllers module exports
-            │   ├── create_pill_controller.rs  # POST /pills endpoint handler
-            │   ├── find_pill_controller.rs    # GET /pills/:id endpoint handler
-            │   └── find_all_pills_controller.rs # GET /pills endpoint handler
-            └── in_memory_repository.rs        # In-memory repository (output adapter)
+            │   ├── create_course_controller.rs # POST /courses endpoint handler
+            │   ├── find_course_controller.rs  # GET /courses/:id endpoint handler
+            │   ├── find_all_courses_controller.rs # GET /courses endpoint handler
+            │   ├── add_pill_to_course_controller.rs # POST /courses/:id/pills endpoint handler
+            │   └── find_course_with_pills_controller.rs # GET /courses/:id/pills endpoint handler
+            └── in_memory_course_repository.rs # In-memory course repository (output adapter)
 ```
 
 ### Layer Responsibilities
@@ -96,7 +142,9 @@ rust-ddd-poc/
 
 ## API Endpoints
 
-### Create a Pill
+### Pills Endpoints
+
+#### Create a Pill
 ```bash
 POST /pills
 Content-Type: application/json
@@ -107,49 +155,162 @@ Content-Type: application/json
 }
 ```
 
-### Get All Pills
+#### Get All Pills
 ```bash
 GET /pills
 ```
 
-### Get Pill by ID
+#### Get Pill by ID
 ```bash
 GET /pills/{id}
 ```
 
+### Courses Endpoints
+
+#### Create a Course
+```bash
+POST /courses
+Content-Type: application/json
+
+{
+  "title": "Introduction to Rust",
+  "description": "Learn the basics of Rust programming",
+  "instructor": "John Doe",
+  "pill_ids": ["pill-id-1", "pill-id-2"]  // Optional: array of existing pill IDs
+}
+```
+
+#### Get All Courses
+```bash
+GET /courses
+```
+
+#### Get Course by ID
+```bash
+GET /courses/{id}
+```
+
+#### Get Course with Pills
+```bash
+GET /courses/{id}/pills
+```
+
+#### Add Pill to Course
+```bash
+POST /courses/{id}/pills
+Content-Type: application/json
+
+{
+  "pill_id": "existing-pill-id"
+}
+```
+
 ## Example Usage
 
-### Create a new pill:
+### Pills API Examples
+
+#### Create a new pill:
 ```bash
 curl -X POST http://localhost:3000/pills \
   -H "Content-Type: application/json" \
   -d '{"title": "Learning Rust", "content": "Rust is a systems programming language"}'
 ```
 
-### Get all pills:
+#### Get all pills:
 ```bash
 curl http://localhost:3000/pills
 ```
 
-### Get specific pill:
+#### Get specific pill:
 ```bash
 curl http://localhost:3000/pills/{pill-id}
 ```
 
+### Courses API Examples
+
+#### Create a new course:
+```bash
+curl -X POST http://localhost:3000/courses \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Rust Fundamentals", "description": "Complete Rust course", "instructor": "Jane Smith"}'
+```
+
+#### Create a course with existing pills:
+```bash
+curl -X POST http://localhost:3000/courses \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Advanced Rust", "description": "Advanced concepts", "instructor": "Bob Wilson", "pill_ids": ["pill-uuid-1", "pill-uuid-2"]}'
+```
+
+#### Get all courses:
+```bash
+curl http://localhost:3000/courses
+```
+
+#### Get specific course:
+```bash
+curl http://localhost:3000/courses/{course-id}
+```
+
+#### Get course with all its pills:
+```bash
+curl http://localhost:3000/courses/{course-id}/pills
+```
+
+#### Add a pill to an existing course:
+```bash
+curl -X POST http://localhost:3000/courses/{course-id}/pills \
+  -H "Content-Type: application/json" \
+  -d '{"pill_id": "existing-pill-id"}'
+```
+
+### Complete Workflow Example
+
+```bash
+# 1. Create some pills first
+PILL1=$(curl -s -X POST http://localhost:3000/pills \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Rust Basics", "content": "Variables and data types"}' | jq -r '.id')
+
+PILL2=$(curl -s -X POST http://localhost:3000/pills \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Ownership", "content": "Memory management in Rust"}' | jq -r '.id')
+
+# 2. Create a course with those pills
+COURSE=$(curl -s -X POST http://localhost:3000/courses \
+  -H "Content-Type: application/json" \
+  -d "{\"title\": \"Complete Rust Course\", \"description\": \"From zero to hero\", \"instructor\": \"Rust Expert\", \"pill_ids\": [\"$PILL1\", \"$PILL2\"]}" | jq -r '.id')
+
+# 3. View the course with all pills
+curl http://localhost:3000/courses/$COURSE/pills
+```
+
 ## Features
 
+### Architecture Features
 - **Clean Architecture**: Separation of concerns with clear boundaries
-- **DDD Principles**: Domain-driven design with bounded contexts
+- **DDD Principles**: Domain-driven design with bounded contexts (Pills and Courses)
+- **Hexagonal Architecture**: Domain core isolated from external concerns
 - **CQRS Pattern**: Command Query Responsibility Segregation with separate command and query folders
+- **Repository Pattern**: Data access abstracted through traits
+
+### Domain Features
+- **Multi-Domain**: Pills and Courses domains with clear boundaries
+- **Domain Relationships**: Courses contain Pills through domain references
+- **Value Objects**: Strong typing with `PillId` and `CourseId`
+- **Domain Logic**: Business rules encapsulated in entities
+- **Cross-Domain Operations**: Adding pills to courses with validation
+
+### Technical Features
 - **Organized Controllers**: Controllers grouped in dedicated folder structure
-- **Modular Commands**: Commands organized in dedicated `command/create/` structure
-- **Modular Queries**: Queries organized in dedicated `query/` structure  
+- **Modular Commands**: Commands organized with dedicated folders per operation
+- **Modular Queries**: Queries organized with specialized handlers
 - **Separated Concerns**: Each component (command, handler, query, domain) in its own file
 - **Domain Organization**: Domain entities and repository interfaces properly separated
-- **Modular Design**: Separate controller files for each endpoint
 - **Async/Await**: Fully asynchronous request handling
 - **Type Safety**: Leverages Rust's type system for compile-time guarantees
 - **Error Handling**: Proper error types and handling throughout the application
+- **Logging**: Comprehensive logging for debugging and monitoring
 
 ## Development
 
@@ -181,89 +342,128 @@ cargo clippy
 ## Architecture Decisions
 
 1. **Hexagonal Architecture**: The application core is isolated from external concerns
-2. **Repository Pattern**: Data access is abstracted through traits
-3. **Command/Query Separation**: Different handlers for reads and writes
-4. **Controller Organization**: HTTP controllers grouped in dedicated `controllers/` folder
-5. **Command Structure**: Commands organized in `command/create/` with separate files for each concern
-6. **Query Structure**: Queries organized in `query/` with dedicated handlers for read operations
-7. **Domain Organization**: Domain entities, value objects, and repository interfaces in separate files
-8. **Modular Design**: Each HTTP endpoint, command, and query has its own file
-9. **Dependency Injection**: Dependencies are injected through constructors
-10. **Error Handling**: Custom error types for better error management
+2. **Domain-Driven Design**: Clear bounded contexts for Pills and Courses
+3. **Repository Pattern**: Data access is abstracted through traits
+4. **Command/Query Separation**: Different handlers for reads and writes (CQRS)
+5. **Cross-Domain References**: Courses reference Pills by ID, not embedding them
+6. **Controller Organization**: HTTP controllers grouped in dedicated `controllers/` folder
+7. **Command Structure**: Commands organized with dedicated folders per operation type
+8. **Query Structure**: Queries organized with specialized handlers for different read scenarios
+9. **Domain Organization**: Domain entities, value objects, and repository interfaces in separate files
+10. **Modular Design**: Each HTTP endpoint, command, and query has its own file
+11. **Dependency Injection**: Dependencies are injected through constructors
+12. **Error Handling**: Custom error types for better error management per domain
+13. **Domain Validation**: Business rules enforced in domain entities and handlers
 
 ## File Content Summary
 
-### Command Structure (`src/pills/application/command/create/`)
+### Pills Domain Structure
 
+#### Command Structure (`src/pills/application/command/create/`)
 - **`create_pill_command.rs`**: Contains the `CreatePillCommand` struct with title and content fields
 - **`create_pill_command_handler.rs`**: Contains the `CreatePillCommandHandler` that processes create commands
 - **`mod.rs`**: Module exports and re-exports for the create command
 
-### Query Structure (`src/pills/application/query/`)
-
+#### Query Structure (`src/pills/application/query/`)
 - **`find_pill_query_handler.rs`**: Contains `FindPillQuery` and `FindPillQueryHandler` for single pill retrieval
 - **`find_all_pills_query_handler.rs`**: Contains `FindAllPillsQuery` and `FindAllPillsQueryHandler` for retrieving all pills
 - **`mod.rs`**: Module exports and re-exports for query handlers
 
-### Domain Structure (`src/pills/domain/`)
-
+#### Domain Structure (`src/pills/domain/`)
 - **`pill.rs`**: Contains the `Pill` entity and `PillId` value object with all business logic
 - **`pills_repository.rs`**: Contains the `PillRepository` trait and `RepositoryError` enum
 - **`mod.rs`**: Domain module exports and re-exports
 
-### Controllers (`src/pills/infrastructure/controllers/`)
-
+#### Controllers (`src/pills/infrastructure/controllers/`)
 - **`create_pill_controller.rs`**: HTTP handler for `POST /pills` endpoint
-- **`find_pill_controller.rs`**: HTTP handler for `GET /pills/:id` endpoint  
+- **`find_pill_controller.rs`**: HTTP handler for `GET /pills/:id` endpoint
 - **`find_all_pills_controller.rs`**: HTTP handler for `GET /pills` endpoint
+
+### Courses Domain Structure
+
+#### Command Structure (`src/courses/application/command/`)
+- **`create/`**: Create course command and handler
+  - **`create_course_command.rs`**: Contains the `CreateCourseCommand` struct
+  - **`create_course_command_handler.rs`**: Contains the `CreateCourseCommandHandler`
+- **`add_pill/`**: Add pill to course command and handler
+  - **`add_pill_to_course_command.rs`**: Contains the `AddPillToCourseCommand` struct
+  - **`add_pill_to_course_command_handler.rs`**: Contains the `AddPillToCourseCommandHandler`
+
+#### Query Structure (`src/courses/application/query/`)
+- **`find_course_query_handler.rs`**: Contains `FindCourseQuery` and `FindCourseQueryHandler`
+- **`find_all_courses_query_handler.rs`**: Contains `FindAllCoursesQuery` and `FindAllCoursesQueryHandler`
+- **`find_course_with_pills_query_handler.rs`**: Contains `FindCourseWithPillsQuery` and handler for retrieving course with pills
+
+#### Domain Structure (`src/courses/domain/`)
+- **`course.rs`**: Contains the `Course` entity and `CourseId` value object with business logic
+- **`course_repository.rs`**: Contains the `CourseRepository` trait and `CourseRepositoryError` enum
+- **`mod.rs`**: Domain module exports and re-exports
+
+#### Controllers (`src/courses/infrastructure/controllers/`)
+- **`create_course_controller.rs`**: HTTP handler for `POST /courses` endpoint
+- **`find_course_controller.rs`**: HTTP handler for `GET /courses/:id` endpoint
+- **`find_all_courses_controller.rs`**: HTTP handler for `GET /courses` endpoint
+- **`add_pill_to_course_controller.rs`**: HTTP handler for `POST /courses/:id/pills` endpoint
+- **`find_course_with_pills_controller.rs`**: HTTP handler for `GET /courses/:id/pills` endpoint
 
 ### Other Key Files
 
+#### Pills Domain
 - **`src/pills/domain/pill.rs`**: Core domain entities (`Pill`, `PillId`) and business logic
 - **`src/pills/domain/pills_repository.rs`**: Repository interface and domain errors
-- **`src/pills/application/query/find_pill_query_handler.rs`**: Single pill query handler
-- **`src/pills/application/query/find_all_pills_query_handler.rs`**: All pills query handler
 - **`src/pills/infrastructure/in_memory_repository.rs`**: In-memory implementation of `PillRepository`
-- **`src/main.rs`**: Application entry point with dependency injection and server setup
+
+#### Courses Domain
+- **`src/courses/domain/course.rs`**: Core domain entities (`Course`, `CourseId`) and business logic
+- **`src/courses/domain/course_repository.rs`**: Repository interface and domain errors
+- **`src/courses/infrastructure/in_memory_course_repository.rs`**: In-memory implementation of `CourseRepository`
+
+#### Application Entry
+- **`src/main.rs`**: Application entry point with dependency injection and server setup for both domains
 
 ## Import Structure
 
 ### Main Application Imports (`src/main.rs`)
 ```rust
-use pills::application::{CreatePillCommandHandler, FindAllPillsQueryHandler, FindPillQueryHandler, PillRepository, RepositoryError};
-use pills::infrastructure::controllers::create_pill_controller::create_pill_handler;
-use pills::infrastructure::controllers::find_all_pills_controller::find_all_pills_handler;
-use pills::infrastructure::controllers::find_pill_controller::find_pill_by_id_handler;
+// Pills imports
+use pills::application::{CreatePillCommandHandler, FindAllPillsQueryHandler, FindPillQueryHandler, PillRepository};
+use pills::infrastructure::controllers::*;
 use pills::infrastructure::in_memory_repository::InMemoryPillRepository;
+
+// Courses imports
+use courses::application::{CreateCourseCommandHandler, FindAllCoursesQueryHandler, FindCourseQueryHandler,
+                         FindCourseWithPillsQueryHandler, AddPillToCourseCommandHandler, CourseRepository};
+use courses::infrastructure::controllers::*;
+use courses::infrastructure::in_memory_course_repository::InMemoryCourseRepository;
 ```
 
-### Controller Imports
+### Cross-Domain Integration
 ```rust
-// create_pill_controller.rs
-use crate::pills::application::{CreatePillCommand, CreatePillCommandHandler};
+// add_pill_to_course_command_handler.rs - Shows cross-domain dependency
+use crate::courses::domain::course_repository::{CourseRepository, CourseRepositoryError};
+use crate::pills::domain::pills_repository::PillRepository;
 
-// find_pill_controller.rs  
-use crate::pills::application::{FindPillQuery, FindPillQueryHandler, RepositoryError};
-use crate::pills::domain::PillId;
+// find_course_with_pills_query_handler.rs - Shows domain composition
+use crate::courses::domain::{Course, CourseRepository};
+use crate::pills::domain::{Pill, PillRepository};
 ```
 
-### Repository Implementation Imports
+### Domain Relationship Patterns
 ```rust
-// in_memory_repository.rs
-use crate::pills::domain::{Pill, PillId, PillRepository, RepositoryError};
-```
+// Course entity references Pills by ID, not by embedding
+pub struct Course {
+    id: CourseId,
+    title: String,
+    description: String,
+    instructor: String,
+    pill_ids: Vec<PillId>,  // Reference by ID, not by value
+}
 
-### Application Layer Imports
-```rust
-// query/find_pill_query_handler.rs
-use crate::pills::domain::{Pill, PillId, PillRepository, RepositoryError};
-
-// query/find_all_pills_query_handler.rs
-use crate::pills::domain::{Pill, PillRepository, RepositoryError};
-
-// command/create/create_pill_command_handler.rs
-use super::create_pill_command::CreatePillCommand;
-use crate::pills::domain::{Pill, PillId, PillRepository, RepositoryError};
+// Cross-domain operations validate relationships
+impl AddPillToCourseCommandHandler {
+    // Validates pill exists before adding to course
+    // Demonstrates cross-domain validation patterns
+}
 ```
 
 ## API Testing
@@ -302,7 +502,7 @@ The application includes comprehensive logging to help with debugging and monito
 - **Find by ID**: Logs the search process and displays found pill details using accessor methods
 - **Find All**: Logs each pill found with ID, title, and content for debugging purposes
 
-### Repository Logging  
+### Repository Logging
 - **Save Operations**: Logs when pills are saved with ID and total count
 - **In-Memory Storage**: Shows current state of the repository
 
@@ -349,64 +549,115 @@ The structured logging makes it easy to:
 
 ## CQRS Implementation Details
 
-This project implements the Command Query Responsibility Segregation (CQRS) pattern with clear separation between commands and queries:
+This project implements the Command Query Responsibility Segregation (CQRS) pattern across both Pills and Courses domains:
 
 ### Command Side (Write Operations)
-**Location**: `src/pills/application/command/`
 
-- **Commands**: Data structures representing write intentions
-  - `CreatePillCommand`: Contains title and content for new pills
-- **Command Handlers**: Business logic for processing commands
-  - `CreatePillCommandHandler`: Validates and executes pill creation
+#### Pills Commands
+**Location**: `src/pills/application/command/`
+- **Commands**: `CreatePillCommand`
+- **Handlers**: `CreatePillCommandHandler`
 - **Flow**: Command → Handler → Domain → Repository
 
-### Query Side (Read Operations)  
-**Location**: `src/pills/application/query/`
+#### Courses Commands
+**Location**: `src/courses/application/command/`
+- **Commands**:
+  - `CreateCourseCommand`: Creates new courses with optional pill references
+  - `AddPillToCourseCommand`: Adds existing pills to existing courses
+- **Handlers**:
+  - `CreateCourseCommandHandler`: Validates and creates courses
+  - `AddPillToCourseCommandHandler`: Cross-domain validation and course updates
+- **Flow**: Command → Handler → Domain Validation → Repository
 
-- **Queries**: Data structures representing read intentions
-  - `FindPillQuery`: Contains ID for single pill lookup (in `find_pill_query_handler.rs`)
-  - `FindAllPillsQuery`: Marker for retrieving all pills (in `find_all_pills_query_handler.rs`)
-- **Query Handlers**: Business logic for processing queries
-  - `FindPillQueryHandler`: Retrieves single pill with validation (in `find_pill_query_handler.rs`)
-  - `FindAllPillsQueryHandler`: Retrieves all pills with logging (in `find_all_pills_query_handler.rs`)
-- **Flow**: Query → Handler → Repository → Domain
+### Query Side (Read Operations)
+
+#### Pills Queries
+**Location**: `src/pills/application/query/`
+- **Queries**: `FindPillQuery`, `FindAllPillsQuery`
+- **Handlers**: `FindPillQueryHandler`, `FindAllPillsQueryHandler`
+
+#### Courses Queries
+**Location**: `src/courses/application/query/`
+- **Queries**:
+  - `FindCourseQuery`: Single course retrieval
+  - `FindAllCoursesQuery`: All courses retrieval
+  - `FindCourseWithPillsQuery`: Course with associated pills
+- **Handlers**: Specialized handlers for each query type
+- **Cross-Domain**: `FindCourseWithPillsQueryHandler` coordinates between domains
 
 ### CQRS Benefits in This Implementation
 
-1. **Separation of Concerns**: Write and read operations are handled separately
+1. **Separation of Concerns**: Write and read operations are handled separately per domain
 2. **Independent Scaling**: Commands and queries can be optimized independently
 3. **Clear Intent**: Explicit query and command objects express user intentions
-4. **Domain Focus**: Both sides interact with the same domain model
-5. **Testability**: Each handler can be tested in isolation
+4. **Domain Focus**: Both sides interact with their respective domain models
+5. **Cross-Domain Coordination**: Handlers manage relationships between domains
+6. **Testability**: Each handler can be tested in isolation
+7. **Specialized Queries**: Different query handlers for different read scenarios
 
-### CQRS Pattern Structure
+### Multi-Domain CQRS Structure
 ```
-Application Layer
-├── command/
-│   └── create/
-│       ├── CreatePillCommand (Data)
-│       └── CreatePillCommandHandler (Logic)
-└── query/
-    ├── find_pill_query_handler.rs (FindPillQuery + Handler)
-    └── find_all_pills_query_handler.rs (FindAllPillsQuery + Handler)
+Pills Domain
+├── command/create/ (CreatePillCommand + Handler)
+└── query/ (FindPillQuery, FindAllPillsQuery + Handlers)
 
-Domain Layer (Shared)
-├── Pill (Entity)
-├── PillId (Value Object)
-└── PillRepository (Interface)
+Courses Domain
+├── command/
+│   ├── create/ (CreateCourseCommand + Handler)
+│   └── add_pill/ (AddPillToCourseCommand + Handler - Cross-domain)
+└── query/
+    ├── find_course_query_handler.rs
+    ├── find_all_courses_query_handler.rs
+    └── find_course_with_pills_query_handler.rs (Cross-domain)
+
+Shared Domain Interfaces
+├── Pills: PillRepository, Pill, PillId
+└── Courses: CourseRepository, Course, CourseId
 ```
 
 ## Future Enhancements
 
+### Infrastructure Improvements
 - Add persistent storage (PostgreSQL, MongoDB)
+- Implement separate read/write databases for full CQRS
+- Add Redis caching for query results
+- Add distributed tracing and metrics
+- Add health check endpoints
+
+### Security & Validation
 - Implement authentication and authorization
 - Add input validation and DTOs
-- Add structured logging with proper log levels
-- Add unit and integration tests
+- Add rate limiting and request throttling
+- Add CORS configuration
+
+### Development & Testing
+- Add comprehensive unit and integration tests
+- Add property-based testing for domain logic
+- Add mutation testing for test quality
+- Add performance benchmarks
+
+### Observability
+- Add structured logging with proper log levels (tracing crate)
+- Add metrics and monitoring (Prometheus)
+- Add distributed tracing (OpenTelemetry)
+- Add error tracking and alerting
+
+### API & Documentation
 - Add API documentation with OpenAPI/Swagger
-- Add health check endpoints
-- Add metrics and monitoring
-- Add configuration management
-- Implement separate read/write databases for full CQRS
-- Add event sourcing capabilities
-- Add query result caching
+- Add GraphQL endpoint for flexible queries
+- Add API versioning strategy
+- Add request/response examples
+
+### Domain Enhancements
+- Add more course management operations (update, delete)
+- Add pill ordering within courses
+- Add course prerequisites and dependencies
+- Add user enrollment and progress tracking
+- Add course categories and tags
+
+### DevOps & Deployment
+- Add Docker containerization
+- Add Kubernetes deployment manifests
+- Add CI/CD pipeline configuration
+- Add configuration management (environment-specific configs)
+- Add database migration tools
