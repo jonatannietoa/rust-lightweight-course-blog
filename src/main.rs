@@ -1,4 +1,6 @@
 mod courses;
+mod database;
+mod health;
 mod pills;
 
 use axum::{
@@ -14,7 +16,7 @@ use pills::domain::PillRepository;
 use pills::infrastructure::controllers::create_pill_controller::create_pill_handler;
 use pills::infrastructure::controllers::find_all_pills_controller::find_all_pills_handler;
 use pills::infrastructure::controllers::find_pill_controller::find_pill_by_id_handler;
-use pills::infrastructure::in_memory_repository::InMemoryPillRepository;
+use pills::infrastructure::mongodb_repository::MongoDbPillRepository;
 
 use courses::application::command::{AddPillToCourseCommandHandler, CreateCourseCommandHandler};
 use courses::application::query::{
@@ -26,7 +28,12 @@ use courses::infrastructure::controllers::create_course_controller::create_cours
 use courses::infrastructure::controllers::find_all_courses_controller::find_all_courses_handler;
 use courses::infrastructure::controllers::find_course_controller::find_course_by_id_handler;
 use courses::infrastructure::controllers::find_course_with_pills_controller::find_course_with_pills_handler;
-use courses::infrastructure::in_memory_course_repository::InMemoryCourseRepository;
+use courses::infrastructure::mongodb_repository::MongoDbCourseRepository;
+
+use database::DatabaseConfig;
+use health::{
+    health_check_handler, liveness_check_handler, readiness_check_handler, HealthService,
+};
 
 #[derive(Clone)]
 struct AppState {
@@ -41,13 +48,35 @@ struct AppState {
     find_all_courses_handler: Arc<FindAllCoursesQueryHandler>,
     find_course_with_pills_handler: Arc<FindCourseWithPillsQueryHandler>,
     add_pill_to_course_handler: Arc<AddPillToCourseCommandHandler>,
+
+    // Health service
+    health_service: Arc<HealthService>,
 }
 
 #[tokio::main]
 async fn main() {
+    // Load environment variables
+    dotenv::dotenv().ok();
+
+    // Initialize database connection
+    let db_config = DatabaseConfig::new()
+        .await
+        .expect("Failed to connect to MongoDB");
+
+    // Create database indexes for better performance
+    if let Err(e) = db_config.initialize_indexes().await {
+        eprintln!("Warning: Failed to create database indexes: {}", e);
+        eprintln!("Application will continue but performance may be affected");
+    }
+
+    let database = db_config.get_database();
+
+    // Initialize health service
+    let health_service = Arc::new(HealthService::new(Arc::new(database.clone())));
+
     // Initialize repositories
-    let pill_repo: Arc<dyn PillRepository> = Arc::new(InMemoryPillRepository::new());
-    let course_repo: Arc<dyn CourseRepository> = Arc::new(InMemoryCourseRepository::new());
+    let pill_repo: Arc<dyn PillRepository> = Arc::new(MongoDbPillRepository::new(database));
+    let course_repo: Arc<dyn CourseRepository> = Arc::new(MongoDbCourseRepository::new(database));
 
     let app_state = AppState {
         // Pills handlers
@@ -67,17 +96,25 @@ async fn main() {
             course_repo.clone(),
             pill_repo.clone(),
         )),
+        health_service,
     };
 
-    let app = Router::new()
-        // Pills routes
+    // Create separate routers for different handler states
+    let health_router = Router::new()
+        .route("/health", get(health_check_handler))
+        .route("/health/ready", get(readiness_check_handler))
+        .with_state(app_state.health_service.clone())
+        .route("/health/live", get(liveness_check_handler));
+
+    let pills_router = Router::new()
         .route("/pills", post(create_pill_handler))
         .with_state(app_state.create_pill_handler.clone())
         .route("/pills/:id", get(find_pill_by_id_handler))
         .with_state(app_state.find_pill_handler.clone())
         .route("/pills", get(find_all_pills_handler))
-        .with_state(app_state.find_all_pills_handler.clone())
-        // Courses routes
+        .with_state(app_state.find_all_pills_handler.clone());
+
+    let courses_router = Router::new()
         .route("/courses", post(create_course_handler))
         .with_state(app_state.create_course_handler.clone())
         .route("/courses/:id", get(find_course_by_id_handler))
@@ -89,7 +126,30 @@ async fn main() {
         .route("/courses/:id/pills", post(add_pill_to_course_handler))
         .with_state(app_state.add_pill_to_course_handler.clone());
 
-    println!("🚀 Servidor escuchando en 0.0.0.0:3000");
-    let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let app = Router::new()
+        .merge(health_router)
+        .merge(pills_router)
+        .merge(courses_router);
+
+    let host = std::env::var("SERVER_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+    let port = std::env::var("SERVER_PORT").unwrap_or_else(|_| "3000".to_string());
+    let address = format!("{}:{}", host, port);
+
+    println!("🚀 Server listening on {}", address);
+    println!("📊 Health check available at: http://{}/health", address);
+    println!("🔍 API endpoints:");
+    println!("   - POST /pills - Create a pill");
+    println!("   - GET  /pills - Get all pills");
+    println!("   - GET  /pills/{{id}} - Get pill by ID");
+    println!("   - POST /courses - Create a course");
+    println!("   - GET  /courses - Get all courses");
+    println!("   - GET  /courses/{{id}} - Get course by ID");
+    println!("   - GET  /courses/{{id}}/pills - Get course with pills");
+    println!("   - POST /courses/{{id}}/pills - Add pill to course");
+    println!("   - GET  /health - Health check");
+    println!("   - GET  /health/ready - Readiness probe");
+    println!("   - GET  /health/live - Liveness probe");
+
+    let listener = TcpListener::bind(&address).await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }

@@ -27,7 +27,7 @@ impl AddPillToCourseCommandHandler {
         match self.pill_repository.find_by_id(command.pill_id).await {
             Ok(Some(_)) => {
                 println!(
-                    "Handler (AddPillToCourse): Pill {} exist, adding to the course {}",
+                    "Handler (AddPillToCourse): Pill {} exists, adding to course {}",
                     command.pill_id, command.course_id
                 );
             }
@@ -39,25 +39,15 @@ impl AddPillToCourseCommandHandler {
             }
         }
 
-        // Find the course
         let mut course = self
             .course_repository
             .find_by_id(command.course_id)
             .await?
             .ok_or(CourseRepositoryError::NotFound)?;
 
-        // Add the pill to the course (this will generate domain events)
         course.add_pill(command.pill_id);
 
-        // Save the updated course
         self.course_repository.save(&course).await?;
-
-        println!(
-            "Handler (AddPillToCourse): Píldora {} añadida al curso {}. Total píldoras: {}",
-            command.pill_id,
-            command.course_id,
-            course.pill_count()
-        );
 
         Ok(())
     }

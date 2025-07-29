@@ -126,6 +126,70 @@ rust-ddd-poc/
 - **uuid**: UUID generation with v4 and serde features
 - **thiserror**: Error handling
 - **async-trait**: Async traits support
+- **mongodb**: MongoDB driver for Rust
+- **bson**: BSON serialization support
+- **futures**: Async stream handling
+- **dotenv**: Environment variables loading
+- **chrono**: Date and time handling for health checks
+
+## MongoDB Configuration
+
+This application uses MongoDB as the persistence layer. The following environment variables can be configured:
+
+### Environment Variables
+
+Create a `.env` file in the project root with the following configuration:
+
+```env
+# MongoDB Configuration
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority&appName=YourApp
+DATABASE_NAME=rust_ddd_poc
+
+# Server Configuration
+SERVER_HOST=0.0.0.0
+SERVER_PORT=3000
+
+# Environment
+RUST_LOG=debug
+```
+
+### MongoDB Setup
+
+1. **MongoDB Atlas (Recommended)**:
+   - Create a free MongoDB Atlas account at https://www.mongodb.com/atlas
+   - Create a new cluster
+   - Get your connection string and replace `<password>` with your actual password
+   - Update the `MONGODB_URI` in your `.env` file
+
+2. **Local MongoDB**:
+   - Install MongoDB locally
+   - Use connection string: `mongodb://localhost:27017`
+
+### Database Schema
+
+The application automatically creates the following collections:
+
+- **pills**: Stores pill documents
+  ```json
+  {
+    "_id": "uuid-string",
+    "id": "uuid-string", 
+    "title": "string",
+    "content": "string"
+  }
+  ```
+
+- **courses**: Stores course documents
+  ```json
+  {
+    "_id": "uuid-string",
+    "id": "uuid-string",
+    "title": "string", 
+    "description": "string",
+    "instructor": "string",
+    "pill_ids": ["uuid-array"]
+  }
+  ```
 
 ## Running the Application
 
@@ -133,14 +197,60 @@ rust-ddd-poc/
 
 2. Clone and navigate to the project directory
 
-3. Run the application:
+3. Set up MongoDB connection:
+   - Copy `.env.example` to `.env` (if available) or create `.env` file
+   - Update `MONGODB_URI` with your MongoDB connection string
+   - Replace `<password>` with your actual database password
+
+4. Run the application:
    ```bash
    cargo run
    ```
 
+The application will:
+- Load environment variables from `.env`
+- Connect to MongoDB and test the connection
+- Create database indexes for better performance
+- Start the HTTP server on the configured host:port
+
 4. The server will start on `http://0.0.0.0:3000`
 
 ## API Endpoints
+
+### Health Check Endpoints
+
+#### Health Check
+```bash
+GET /health
+```
+Returns comprehensive health status including database connectivity.
+
+Response:
+```json
+{
+  "status": "healthy",
+  "database": {
+    "connected": true,
+    "database_name": "rust_ddd_poc",
+    "ping_response_time_ms": 45,
+    "error": null
+  },
+  "timestamp": "2024-01-15T10:30:00Z",
+  "version": "1.0.0"
+}
+```
+
+#### Readiness Check
+```bash
+GET /health/ready
+```
+Returns readiness status for load balancers and orchestrators.
+
+#### Liveness Check
+```bash
+GET /health/live
+```
+Returns liveness status to indicate if the application is running.
 
 ### Pills Endpoints
 
@@ -538,6 +648,57 @@ curl -X POST http://localhost:3000/pills \
 
 curl http://localhost:3000/pills
 curl http://localhost:3000/pills/{pill-id}
+```
+
+### MongoDB Integration Testing
+
+#### Automated Test Script
+Use the provided test script to verify MongoDB integration:
+
+```bash
+# Make the script executable
+chmod +x test_mongodb.sh
+
+# Start the server
+cargo run
+
+# In another terminal, run comprehensive tests
+./test_mongodb.sh
+```
+
+The test script includes:
+- Health check validation
+- Full CRUD operations for Pills and Courses
+- Course-Pills relationship testing
+- Data consistency verification
+- MongoDB connection status monitoring
+
+#### Health Check Testing
+Monitor database connectivity:
+
+```bash
+# Check overall health
+curl http://localhost:3000/health
+
+# Check readiness (for load balancers)
+curl http://localhost:3000/health/ready
+
+# Check liveness (for orchestrators)
+curl http://localhost:3000/health/live
+```
+
+#### Database Verification
+After running tests, verify data persistence in MongoDB:
+
+1. **MongoDB Atlas Dashboard**: Check your cluster for the `rust_ddd_poc` database
+2. **MongoDB Compass**: Connect and browse collections: `pills` and `courses`
+3. **Command Line**: Use `mongo` shell to query collections
+
+```javascript
+// MongoDB shell commands
+use rust_ddd_poc;
+db.pills.find().pretty();
+db.courses.find().pretty();
 ```
 
 ### Automated Testing Support

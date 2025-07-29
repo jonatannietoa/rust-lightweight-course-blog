@@ -48,4 +48,12 @@ impl Pill {
     pub fn id(&self) -> PillId {
         self.id
     }
+
+    pub fn title(&self) -> &str {
+        &self.title
+    }
+
+    pub fn content(&self) -> &str {
+        &self.content
+    }
 }
