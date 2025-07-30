@@ -59,9 +59,23 @@ rust-ddd-poc/
 ├── Cargo.lock                                 # Dependency lock file
 ├── .gitignore                                 # Git ignore file
 ├── README.md                                  # Project documentation
+├── DEPLOYMENT.md                              # Deployment instructions and configuration
+├── EXAMPLES.md                                # API usage examples and workflows
+├── LOGGING.md                                 # Logging configuration and debugging guide
+├── demo.md                                    # Demo scenarios and testing workflows
+├── test_api.sh                                # Automated API endpoint testing script
+├── test_logging.sh                            # Logging functionality testing script
+├── test_mongodb.sh                            # MongoDB integration testing script
 ├── target/                                    # Build artifacts (generated)
 └── src/                                       # Source code
     ├── main.rs                                # Application entry point & DI setup
+    ├── logging.rs                             # Centralized logging configuration and utilities
+    ├── database/                              # Database connection and configuration
+    │   ├── mod.rs                             # Database module exports
+    │   ├── error.rs                           # Database error types and handling
+    │   └── indexes.rs                         # MongoDB index definitions and management
+    ├── health/                                # Health check endpoints and monitoring
+    │   └── mod.rs                             # Health check module with readiness and liveness probes
     ├── pills/                                 # Pills bounded context
     │   ├── mod.rs                             # Module declarations
     │   ├── domain/                            # Domain layer
@@ -87,7 +101,9 @@ rust-ddd-poc/
     │       │   ├── create_pill_controller.rs  # POST /pills endpoint handler
     │       │   ├── find_pill_controller.rs    # GET /pills/:id endpoint handler
     │       │   └── find_all_pills_controller.rs # GET /pills endpoint handler
-    │       └── in_memory_repository.rs        # In-memory repository (output adapter)
+    │       └── persistense/                   # Persistence layer (output adapters)
+    │           ├── mod.rs                     # Persistence module exports
+    │           └── mongodb_repository.rs      # MongoDB repository implementation
     └── courses/                               # Courses bounded context
         ├── mod.rs                             # Module declarations
         ├── domain/                            # Domain layer
@@ -120,7 +136,9 @@ rust-ddd-poc/
             │   ├── find_all_courses_controller.rs # GET /courses endpoint handler
             │   ├── add_pill_to_course_controller.rs # POST /courses/:id/pills endpoint handler
             │   └── find_course_with_pills_controller.rs # GET /courses/:id/pills endpoint handler
-            └── in_memory_course_repository.rs # In-memory course repository (output adapter)
+            └── persistence/                   # Persistence layer (output adapters)
+                ├── mod.rs                     # Persistence module exports
+                └── mongodb_repository.rs      # MongoDB course repository implementation
 ```
 
 ### Layer Responsibilities
@@ -201,7 +219,7 @@ The application automatically creates the following collections:
   ```json
   {
     "_id": "uuid-string",
-    "id": "uuid-string", 
+    "id": "uuid-string",
     "title": "string",
     "content": "string"
   }
@@ -212,7 +230,7 @@ The application automatically creates the following collections:
   {
     "_id": "uuid-string",
     "id": "uuid-string",
-    "title": "string", 
+    "title": "string",
     "description": "string",
     "instructor": "string",
     "pill_ids": ["uuid-array"]
@@ -517,6 +535,10 @@ cargo clippy
 - **`find_pill_controller.rs`**: HTTP handler for `GET /pills/:id` endpoint
 - **`find_all_pills_controller.rs`**: HTTP handler for `GET /pills` endpoint
 
+#### Persistence (`src/pills/infrastructure/persistense/`)
+- **`mongodb_repository.rs`**: MongoDB implementation of `PillRepository` trait
+- **`mod.rs`**: Persistence module exports and configuration
+
 ### Courses Domain Structure
 
 #### Command Structure (`src/courses/application/command/`)
@@ -544,35 +566,66 @@ cargo clippy
 - **`add_pill_to_course_controller.rs`**: HTTP handler for `POST /courses/:id/pills` endpoint
 - **`find_course_with_pills_controller.rs`**: HTTP handler for `GET /courses/:id/pills` endpoint
 
+#### Persistence (`src/courses/infrastructure/persistence/`)
+- **`mongodb_repository.rs`**: MongoDB implementation of `CourseRepository` trait
+- **`mod.rs`**: Persistence module exports and configuration
+
 ### Other Key Files
 
 #### Pills Domain
 - **`src/pills/domain/pill.rs`**: Core domain entities (`Pill`, `PillId`) and business logic
 - **`src/pills/domain/pills_repository.rs`**: Repository interface and domain errors
-- **`src/pills/infrastructure/in_memory_repository.rs`**: In-memory implementation of `PillRepository`
+- **`src/pills/infrastructure/persistense/mongodb_repository.rs`**: MongoDB implementation of `PillRepository`
 
 #### Courses Domain
 - **`src/courses/domain/course.rs`**: Core domain entities (`Course`, `CourseId`) and business logic
 - **`src/courses/domain/course_repository.rs`**: Repository interface and domain errors
-- **`src/courses/infrastructure/in_memory_course_repository.rs`**: In-memory implementation of `CourseRepository`
+- **`src/courses/infrastructure/persistence/mongodb_repository.rs`**: MongoDB implementation of `CourseRepository`
 
 #### Application Entry
 - **`src/main.rs`**: Application entry point with dependency injection and server setup for both domains
+- **`src/logging.rs`**: Centralized logging configuration and utilities
+
+#### Infrastructure Modules
+- **`src/database/`**: Database connection and configuration
+  - **`error.rs`**: Database error types and handling
+  - **`indexes.rs`**: MongoDB index definitions and management
+  - **`mod.rs`**: Database module exports
+- **`src/health/`**: Health check endpoints and monitoring
+  - **`mod.rs`**: Health check module with readiness and liveness probes
+
+#### Additional Documentation
+- **`DEPLOYMENT.md`**: Deployment instructions and configuration
+- **`EXAMPLES.md`**: API usage examples and workflows
+- **`LOGGING.md`**: Logging configuration and debugging guide
+- **`demo.md`**: Demo scenarios and testing workflows
+
+#### Test Scripts
+- **`test_api.sh`**: Automated API endpoint testing
+- **`test_logging.sh`**: Logging functionality testing
+- **`test_mongodb.sh`**: MongoDB integration testing
 
 ## Import Structure
 
 ### Main Application Imports (`src/main.rs`)
 ```rust
 // Pills imports
-use pills::application::{CreatePillCommandHandler, FindAllPillsQueryHandler, FindPillQueryHandler, PillRepository};
+use pills::application::{CreatePillCommandHandler, FindAllPillsQueryHandler, FindPillQueryHandler};
+use pills::domain::PillRepository;
 use pills::infrastructure::controllers::*;
-use pills::infrastructure::in_memory_repository::InMemoryPillRepository;
+use pills::infrastructure::persistense::mongodb_repository::MongoDbPillRepository;
 
 // Courses imports
 use courses::application::{CreateCourseCommandHandler, FindAllCoursesQueryHandler, FindCourseQueryHandler,
-                         FindCourseWithPillsQueryHandler, AddPillToCourseCommandHandler, CourseRepository};
+                         FindCourseWithPillsQueryHandler, AddPillToCourseCommandHandler};
+use courses::domain::CourseRepository;
 use courses::infrastructure::controllers::*;
-use courses::infrastructure::in_memory_course_repository::InMemoryCourseRepository;
+use courses::infrastructure::persistence::mongodb_repository::MongoDbCourseRepository;
+
+// Database and infrastructure imports
+use database::mod::Database;
+use health::mod::HealthCheck;
+use logging::setup_logging;
 ```
 
 ### Cross-Domain Integration
@@ -584,6 +637,14 @@ use crate::pills::domain::pills_repository::PillRepository;
 // find_course_with_pills_query_handler.rs - Shows domain composition
 use crate::courses::domain::{Course, CourseRepository};
 use crate::pills::domain::{Pill, PillRepository};
+```
+
+### Repository Configuration
+```rust
+// main.rs - Repository setup with MongoDB
+let database = Database::new(&mongodb_uri, &database_name).await?;
+let pill_repository = Arc::new(MongoDbPillRepository::new(database.clone()));
+let course_repository = Arc::new(MongoDbCourseRepository::new(database.clone()));
 ```
 
 ### Domain Relationship Patterns
@@ -641,8 +702,8 @@ The application includes comprehensive logging to help with debugging and monito
 - **Find All**: Logs each pill found with ID, title, and content for debugging purposes
 
 ### Repository Logging
-- **Save Operations**: Logs when pills are saved with ID and total count
-- **In-Memory Storage**: Shows current state of the repository
+- **Save Operations**: Logs when pills are saved with ID and MongoDB operations
+- **MongoDB Operations**: Shows database connection status and query results
 
 ### Handler Logging
 - **Create Handler**: Logs when pills are being saved with generated IDs
