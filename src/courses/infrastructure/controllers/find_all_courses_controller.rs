@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use crate::courses::application::{FindAllCoursesQuery, FindAllCoursesQueryHandler};
 
-pub async fn find_all_courses_handler(
+pub async fn find_all_courses_constroller(
     State(handler): State<Arc<FindAllCoursesQueryHandler>>,
 ) -> impl IntoResponse {
     let query = FindAllCoursesQuery;

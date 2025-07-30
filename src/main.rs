@@ -24,11 +24,11 @@ use courses::application::query::{
     FindAllCoursesQueryHandler, FindCourseQueryHandler, FindCourseWithPillsQueryHandler,
 };
 use courses::domain::CourseRepository;
-use courses::infrastructure::controllers::add_pill_to_course_controller::add_pill_to_course_handler;
-use courses::infrastructure::controllers::create_course_controller::create_course_handler;
-use courses::infrastructure::controllers::find_all_courses_controller::find_all_courses_handler;
-use courses::infrastructure::controllers::find_course_controller::find_course_by_id_handler;
-use courses::infrastructure::controllers::find_course_with_pills_controller::find_course_with_pills_handler;
+use courses::infrastructure::controllers::add_pill_to_course_controller::add_pill_to_course_controller;
+use courses::infrastructure::controllers::create_course_controller::create_course_controller;
+use courses::infrastructure::controllers::find_all_courses_controller::find_all_courses_constroller;
+use courses::infrastructure::controllers::find_course_controller::find_course_by_id_controller;
+use courses::infrastructure::controllers::find_course_with_pills_controller::find_course_with_pills_controller;
 use courses::infrastructure::persistence::mongodb_repository::MongoDbCourseRepository;
 
 use database::DatabaseConfig;
@@ -119,15 +119,15 @@ async fn main() {
         .with_state(app_state.find_all_pills_handler.clone());
 
     let courses_router = Router::new()
-        .route("/courses", post(create_course_handler))
+        .route("/courses", post(create_course_controller))
         .with_state(app_state.create_course_handler.clone())
-        .route("/courses/:id", get(find_course_by_id_handler))
+        .route("/courses/:id", get(find_course_by_id_controller))
         .with_state(app_state.find_course_handler.clone())
-        .route("/courses", get(find_all_courses_handler))
+        .route("/courses", get(find_all_courses_constroller))
         .with_state(app_state.find_all_courses_handler.clone())
-        .route("/courses/:id/pills", get(find_course_with_pills_handler))
+        .route("/courses/:id/pills", get(find_course_with_pills_controller))
         .with_state(app_state.find_course_with_pills_handler.clone())
-        .route("/courses/:id/pills", post(add_pill_to_course_handler))
+        .route("/courses/:id/pills", post(add_pill_to_course_controller))
         .with_state(app_state.add_pill_to_course_handler.clone());
 
     let app = Router::new()

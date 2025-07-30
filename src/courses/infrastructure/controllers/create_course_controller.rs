@@ -31,7 +31,7 @@ pub struct CreateCourseResponse {
     message: String,
 }
 
-pub async fn create_course_handler(
+pub async fn create_course_controller(
     State(handler): State<Arc<CreateCourseCommandHandler>>,
     Json(payload): Json<CreateCourseRequest>,
 ) -> impl IntoResponse {

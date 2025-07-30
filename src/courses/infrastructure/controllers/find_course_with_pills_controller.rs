@@ -10,7 +10,7 @@ use crate::courses::application::{
 };
 use crate::courses::domain::CourseId;
 
-pub async fn find_course_with_pills_handler(
+pub async fn find_course_with_pills_controller(
     State(handler): State<Arc<FindCourseWithPillsQueryHandler>>,
     Path(id): Path<CourseId>,
 ) -> impl IntoResponse {

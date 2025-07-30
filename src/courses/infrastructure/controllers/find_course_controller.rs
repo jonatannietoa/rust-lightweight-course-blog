@@ -8,7 +8,7 @@ use std::sync::Arc;
 use crate::courses::application::{CourseRepositoryError, FindCourseQuery, FindCourseQueryHandler};
 use crate::courses::domain::CourseId;
 
-pub async fn find_course_by_id_handler(
+pub async fn find_course_by_id_controller(
     State(handler): State<Arc<FindCourseQueryHandler>>,
     Path(id): Path<CourseId>,
 ) -> impl IntoResponse {

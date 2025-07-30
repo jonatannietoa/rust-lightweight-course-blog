@@ -15,7 +15,7 @@ pub struct AddPillToCourseRequest {
     pill_id: PillId,
 }
 
-pub async fn add_pill_to_course_handler(
+pub async fn add_pill_to_course_controller(
     State(handler): State<Arc<AddPillToCourseCommandHandler>>,
     Path(course_id): Path<CourseId>,
     Json(payload): Json<AddPillToCourseRequest>,
