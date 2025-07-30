@@ -46,21 +46,21 @@ impl FindCourseWithPillsQueryHandler {
                     pills.push(pill);
                 }
                 Ok(None) => {
-                    println!(
+                    tracing::warn!(
                         "Warning: Pill {} referenced by course but not found",
                         pill_id
                     );
                     // Continue processing other pills instead of failing
                 }
                 Err(RepositoryError::NotFound) => {
-                    println!(
+                    tracing::warn!(
                         "Warning: Pill {} referenced by course but not found",
                         pill_id
                     );
                     // Continue processing other pills instead of failing
                 }
                 Err(_) => {
-                    println!("Error fetching pill {}", pill_id);
+                    tracing::error!("Error fetching pill {}", pill_id);
                     return Err(CourseRepositoryError::Unexpected);
                 }
             }

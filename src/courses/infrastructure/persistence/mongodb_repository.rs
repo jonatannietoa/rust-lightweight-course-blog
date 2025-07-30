@@ -22,7 +22,7 @@ impl CourseRepository for MongoDbCourseRepository {
         let update = doc! {
             "$set": mongodb::bson::to_document(course)
                 .map_err(|e| {
-                    eprintln!("Repository: Failed to serialize course {}: {}", course.id(), e);
+                    tracing::error!("Repository: Failed to serialize course {}: {}", course.id(), e);
                     CourseRepositoryError::Unexpected
                 })?
         };
@@ -38,11 +38,11 @@ impl CourseRepository for MongoDbCourseRepository {
             )
             .await
             .map_err(|e| {
-                eprintln!("Repository: Failed to save course {}: {}", course.id(), e);
+                tracing::error!("Repository: Failed to save course {}: {}", course.id(), e);
                 CourseRepositoryError::Unexpected
             })?;
 
-        println!(
+        tracing::info!(
             "Repository: Course {} saved successfully. Modified: {}, Matched: {}",
             course.id(),
             result.modified_count,
@@ -56,13 +56,13 @@ impl CourseRepository for MongoDbCourseRepository {
         let filter = doc! { "_id": id.to_string() };
 
         let course = self.collection.find_one(filter, None).await.map_err(|e| {
-            eprintln!("Repository: Failed to find course {}: {}", id, e);
+            tracing::error!("Repository: Failed to find course {}: {}", id, e);
             CourseRepositoryError::Unexpected
         })?;
 
         match &course {
-            Some(_) => println!("Repository: Found course {}", id),
-            None => println!("Repository: Course {} not found", id),
+            Some(_) => tracing::debug!("Repository: Found course {}", id),
+            None => tracing::debug!("Repository: Course {} not found", id),
         }
 
         Ok(course)
@@ -70,7 +70,7 @@ impl CourseRepository for MongoDbCourseRepository {
 
     async fn find_all(&self) -> Result<Vec<Course>, CourseRepositoryError> {
         let cursor = self.collection.find(doc! {}, None).await.map_err(|e| {
-            eprintln!(
+            tracing::error!(
                 "Repository: Failed to create cursor for find_all courses: {}",
                 e
             );
@@ -78,11 +78,11 @@ impl CourseRepository for MongoDbCourseRepository {
         })?;
 
         let courses: Vec<Course> = cursor.try_collect().await.map_err(|e| {
-            eprintln!("Repository: Failed to collect courses from cursor: {}", e);
+            tracing::error!("Repository: Failed to collect courses from cursor: {}", e);
             CourseRepositoryError::Unexpected
         })?;
 
-        println!("Repository: Found {} courses", courses.len());
+        tracing::info!("Repository: Found {} courses", courses.len());
         Ok(courses)
     }
 
@@ -90,16 +90,17 @@ impl CourseRepository for MongoDbCourseRepository {
         let filter = doc! { "title": title };
 
         let course = self.collection.find_one(filter, None).await.map_err(|e| {
-            eprintln!(
+            tracing::error!(
                 "Repository: Failed to find course by title '{}': {}",
-                title, e
+                title,
+                e
             );
             CourseRepositoryError::Unexpected
         })?;
 
         match &course {
-            Some(c) => println!("Repository: Found course '{}' by title", c.title()),
-            None => println!("Repository: Course with title '{}' not found", title),
+            Some(c) => tracing::debug!("Repository: Found course '{}' by title", c.title()),
+            None => tracing::debug!("Repository: Course with title '{}' not found", title),
         }
 
         Ok(course)

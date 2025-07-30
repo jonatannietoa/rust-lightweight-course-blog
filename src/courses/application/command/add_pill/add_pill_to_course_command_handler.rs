@@ -26,9 +26,10 @@ impl AddPillToCourseCommandHandler {
     ) -> Result<(), CourseRepositoryError> {
         match self.pill_repository.find_by_id(command.pill_id).await {
             Ok(Some(_)) => {
-                println!(
+                tracing::info!(
                     "Handler (AddPillToCourse): Pill {} exists, adding to course {}",
-                    command.pill_id, command.course_id
+                    command.pill_id,
+                    command.course_id
                 );
             }
             Ok(None) => {

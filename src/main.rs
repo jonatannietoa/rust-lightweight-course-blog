@@ -1,6 +1,7 @@
 mod courses;
 mod database;
 mod health;
+mod logging;
 mod pills;
 
 use axum::{
@@ -58,6 +59,9 @@ async fn main() {
     // Load environment variables
     dotenv::dotenv().ok();
 
+    // Initialize logging
+    logging::init();
+
     // Initialize database connection
     let db_config = DatabaseConfig::new()
         .await
@@ -65,8 +69,8 @@ async fn main() {
 
     // Create database indexes for better performance
     if let Err(e) = db_config.initialize_indexes().await {
-        eprintln!("Warning: Failed to create database indexes: {}", e);
-        eprintln!("Application will continue but performance may be affected");
+        tracing::warn!("Failed to create database indexes: {}", e);
+        tracing::warn!("Application will continue but performance may be affected");
     }
 
     let database = db_config.get_database();
@@ -135,20 +139,20 @@ async fn main() {
     let port = std::env::var("SERVER_PORT").unwrap_or_else(|_| "3000".to_string());
     let address = format!("{}:{}", host, port);
 
-    println!("🚀 Server listening on {}", address);
-    println!("📊 Health check available at: http://{}/health", address);
-    println!("🔍 API endpoints:");
-    println!("   - POST /pills - Create a pill");
-    println!("   - GET  /pills - Get all pills");
-    println!("   - GET  /pills/{{id}} - Get pill by ID");
-    println!("   - POST /courses - Create a course");
-    println!("   - GET  /courses - Get all courses");
-    println!("   - GET  /courses/{{id}} - Get course by ID");
-    println!("   - GET  /courses/{{id}}/pills - Get course with pills");
-    println!("   - POST /courses/{{id}}/pills - Add pill to course");
-    println!("   - GET  /health - Health check");
-    println!("   - GET  /health/ready - Readiness probe");
-    println!("   - GET  /health/live - Liveness probe");
+    tracing::info!("🚀 Server listening on {}", address);
+    tracing::info!("📊 Health check available at: http://{}/health", address);
+    tracing::info!("🔍 API endpoints:");
+    tracing::info!("   - POST /pills - Create a pill");
+    tracing::info!("   - GET  /pills - Get all pills");
+    tracing::info!("   - GET  /pills/{{id}} - Get pill by ID");
+    tracing::info!("   - POST /courses - Create a course");
+    tracing::info!("   - GET  /courses - Get all courses");
+    tracing::info!("   - GET  /courses/{{id}} - Get course by ID");
+    tracing::info!("   - GET  /courses/{{id}}/pills - Get course with pills");
+    tracing::info!("   - POST /courses/{{id}}/pills - Add pill to course");
+    tracing::info!("   - GET  /health - Health check");
+    tracing::info!("   - GET  /health/ready - Readiness probe");
+    tracing::info!("   - GET  /health/live - Liveness probe");
 
     let listener = TcpListener::bind(&address).await.unwrap();
     axum::serve(listener, app).await.unwrap();

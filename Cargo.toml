@@ -16,3 +16,5 @@ bson = { version = "2.9.0", features = ["chrono-0_4"] }
 futures = "0.3.30"
 dotenv = "0.15.0"
 chrono = { version = "0.4.31", features = ["serde"] }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter", "json"] }

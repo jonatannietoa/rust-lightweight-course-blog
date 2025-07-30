@@ -7,7 +7,7 @@ pub async fn create_all_indexes(database: &Database) -> Result<(), DatabaseError
     create_pills_indexes(database).await?;
     create_courses_indexes(database).await?;
 
-    println!("Database: All indexes created successfully");
+    tracing::info!("Database: All indexes created successfully");
     Ok(())
 }
 
@@ -23,7 +23,7 @@ async fn create_pills_indexes(database: &Database) -> Result<(), DatabaseError> 
         )
         .await?;
 
-    println!("Database: Pills collection indexes created");
+    tracing::info!("Database: Pills collection indexes created");
     Ok(())
 }
 
@@ -47,7 +47,7 @@ async fn create_courses_indexes(database: &Database) -> Result<(), DatabaseError
         )
         .await?;
 
-    println!("Database: Courses collection indexes created");
+    tracing::info!("Database: Courses collection indexes created");
     Ok(())
 }
 
@@ -66,7 +66,7 @@ pub async fn create_compound_indexes(database: &Database) -> Result<(), Database
         )
         .await?;
 
-    println!("Database: Compound indexes created");
+    tracing::info!("Database: Compound indexes created");
     Ok(())
 }
 
@@ -102,6 +102,6 @@ pub async fn create_text_indexes(database: &Database) -> Result<(), DatabaseErro
         )
         .await?;
 
-    println!("Database: Text search indexes created");
+    tracing::info!("Database: Text search indexes created");
     Ok(())
 }

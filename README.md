@@ -10,6 +10,34 @@ This project demonstrates a clean architecture with the following layers:
 - **Application**: Use cases and command/query handlers
 - **Infrastructure**: External adapters (HTTP controllers, repositories)
 
+## Logging
+
+This application uses the modern `tracing` ecosystem for structured logging. All `println!` and `eprintln!` statements have been replaced with proper logging:
+
+- **Error level**: Critical errors that might cause application failure
+- **Warn level**: Warning conditions that should be noted
+- **Info level**: General information about application flow (default)
+- **Debug level**: Detailed information for debugging
+- **Trace level**: Very detailed tracing information
+
+### Quick Start with Logging
+
+```bash
+# Default logging (info level)
+cargo run
+
+# Debug level logging
+RUST_LOG=debug cargo run
+
+# Only show errors
+RUST_LOG=error cargo run
+
+# Module-specific logging
+RUST_LOG=rust_ai_pills_blog::database=debug,rust_ai_pills_blog::pills=trace cargo run
+```
+
+For detailed logging configuration and examples, see [LOGGING.md](LOGGING.md).
+
 ## Domains
 
 ### Pills Domain
