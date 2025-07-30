@@ -6,8 +6,11 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-use crate::courses::application::{CreateCourseCommand, CreateCourseCommandHandler};
 use crate::courses::domain::{CourseId, CourseRepositoryError};
+use crate::courses::{
+    application::{CreateCourseCommand, CreateCourseCommandHandler},
+    domain::course::Difficulty,
+};
 use crate::pills::domain::PillId;
 
 #[derive(Deserialize)]
@@ -16,6 +19,10 @@ pub struct CreateCourseRequest {
     description: String,
     instructor: String,
     pill_ids: Option<Vec<PillId>>,
+    difficulty: Difficulty,
+    hours: i8,
+    tags: Vec<String>,
+    price: f32,
 }
 
 #[derive(Serialize)]
@@ -33,6 +40,10 @@ pub async fn create_course_handler(
         payload.description,
         payload.instructor,
         payload.pill_ids.unwrap_or_default(),
+        payload.difficulty,
+        payload.hours,
+        payload.tags,
+        payload.price,
     );
 
     match handler.handle(command).await {

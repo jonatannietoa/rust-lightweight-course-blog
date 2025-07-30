@@ -22,12 +22,15 @@ impl CreateCourseCommandHandler {
         }
 
         let course_id = CourseId::new();
-        let course = Course::with_pills(
+        let course = Course::create(
             course_id,
             command.title.clone(),
             command.description,
             command.instructor,
-            command.pill_ids,
+            command.difficulty,
+            command.hours,
+            command.tags,
+            command.price,
         );
 
         self.course_repository.save(&course).await?;

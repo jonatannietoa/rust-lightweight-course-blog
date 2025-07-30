@@ -116,11 +116,11 @@ echo ""
 
 # Test 6: Create course without pills
 make_request "POST" "/courses" \
-    '{"title": "Introduction to Programming", "description": "Basic programming concepts", "instructor": "John Doe"}' \
+    '{"title": "Introduction to Programming", "description": "Basic programming concepts", "instructor": "John Doe", "difficulty": "Beginner", "hours": 10, "tags": ["programming", "basics"], "price": 29.99}' \
     "🎓 Creating course without pills"
 
 # Test 7: Create course with pills
-course_data="{\"title\": \"Complete Rust Course\", \"description\": \"From beginner to advanced Rust programming\", \"instructor\": \"Jane Smith\", \"pill_ids\": [\"$pill1_id\", \"$pill2_id\"]}"
+course_data="{\"title\": \"Complete Rust Course\", \"description\": \"From beginner to advanced Rust programming\", \"instructor\": \"Jane Smith\", \"pill_ids\": [\"$pill1_id\", \"$pill2_id\"], \"difficulty\": \"Intermediate\", \"hours\": 25, \"tags\": [\"rust\", \"programming\", \"systems\"], \"price\": 79.99}"
 course_response=$(curl -s -X POST http://localhost:3000/courses \
     -H "Content-Type: application/json" \
     -d "$course_data")
@@ -163,19 +163,60 @@ make_request "POST" "/courses/$course_id/pills" \
 
 # Test 15: Try to create course with duplicate title
 make_request "POST" "/courses" \
-    '{"title": "Complete Rust Course", "description": "Duplicate title test", "instructor": "Test Instructor"}' \
+    '{"title": "Complete Rust Course", "description": "Duplicate title test", "instructor": "Test Instructor", "difficulty": "Advanced", "hours": 15, "tags": ["test"], "price": 49.99}' \
     "❌ Trying to create course with duplicate title"
+
+echo -e "${BLUE}=== Testing Course Attributes ===${NC}"
+echo ""
+
+# Test 16: Create course with different difficulty levels
+make_request "POST" "/courses" \
+    '{"title": "Expert Rust Patterns", "description": "Advanced design patterns in Rust", "instructor": "Expert Dev", "difficulty": "Expert", "hours": 40, "tags": ["rust", "patterns", "advanced"], "price": 199.99}' \
+    "🎯 Creating expert level course"
+
+# Test 17: Create beginner course with minimal hours
+make_request "POST" "/courses" \
+    '{"title": "Rust Quick Start", "description": "Get started with Rust in 2 hours", "instructor": "Quick Teach", "difficulty": "Beginner", "hours": 2, "tags": ["rust", "quickstart"], "price": 9.99}' \
+    "⚡ Creating quick start course"
+
+# Test 18: Create free course
+make_request "POST" "/courses" \
+    '{"title": "Rust Community Basics", "description": "Free introduction to Rust", "instructor": "Community", "difficulty": "Beginner", "hours": 5, "tags": ["rust", "free", "community"], "price": 0.0}' \
+    "🆓 Creating free course"
+
+# Test 19: Create course with many tags
+make_request "POST" "/courses" \
+    '{"title": "Full Stack Rust", "description": "Complete web development with Rust", "instructor": "Full Stack Dev", "difficulty": "Advanced", "hours": 60, "tags": ["rust", "web", "backend", "frontend", "database", "api", "fullstack"], "price": 299.99}' \
+    "🏷️ Creating course with multiple tags"
+
+# Test 20: Try invalid difficulty level
+make_request "POST" "/courses" \
+    '{"title": "Invalid Course", "description": "Testing invalid difficulty", "instructor": "Test", "difficulty": "SuperExpert", "hours": 10, "tags": ["test"], "price": 50.0}' \
+    "❌ Trying invalid difficulty level"
+
+# Test 21: Try negative hours
+make_request "POST" "/courses" \
+    '{"title": "Negative Hours Course", "description": "Testing negative hours", "instructor": "Test", "difficulty": "Beginner", "hours": -5, "tags": ["test"], "price": 50.0}' \
+    "❌ Trying negative hours"
+
+# Test 22: Try negative price
+make_request "POST" "/courses" \
+    '{"title": "Negative Price Course", "description": "Testing negative price", "instructor": "Test", "difficulty": "Beginner", "hours": 10, "tags": ["test"], "price": -25.0}' \
+    "❌ Trying negative price"
 
 echo -e "${GREEN}=== API Testing Complete! ===${NC}"
 echo ""
 echo -e "${BLUE}Summary:${NC}"
 echo -e "✅ Pills API: Create, Read operations tested"
 echo -e "✅ Courses API: Create, Read operations tested"
+echo -e "✅ Course Attributes: Difficulty, hours, tags, price tested"
 echo -e "✅ Cross-domain operations: Adding pills to courses tested"
-echo -e "✅ Error handling: Invalid IDs and duplicate titles tested"
+echo -e "✅ Error handling: Invalid IDs, duplicate titles, invalid attributes tested"
 echo ""
 echo -e "${YELLOW}Next steps:${NC}"
 echo -e "1. Check server logs for detailed operation traces"
 echo -e "2. Try the API endpoints manually with curl or Postman"
 echo -e "3. Explore the course-pills relationships"
+echo -e "4. Test course filtering by difficulty, price range, or tags"
+echo -e "5. Test course updates for attributes like difficulty and price"
 echo ""
