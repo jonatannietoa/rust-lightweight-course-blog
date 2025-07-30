@@ -90,30 +90,6 @@ impl Course {
         }
     }
 
-    pub fn with_pills(
-        id: CourseId,
-        title: String,
-        description: String,
-        instructor: String,
-        pill_ids: Vec<PillId>,
-        difficulty: Difficulty,
-        hours: i8,
-        tags: Vec<String>,
-        price: f32,
-    ) -> Self {
-        Self {
-            id,
-            title,
-            description,
-            instructor,
-            pill_ids,
-            difficulty,
-            hours,
-            tags,
-            price,
-        }
-    }
-
     pub fn id(&self) -> CourseId {
         self.id
     }
