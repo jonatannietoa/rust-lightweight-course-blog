@@ -16,7 +16,7 @@ use pills::domain::PillRepository;
 use pills::infrastructure::controllers::create_pill_controller::create_pill_handler;
 use pills::infrastructure::controllers::find_all_pills_controller::find_all_pills_handler;
 use pills::infrastructure::controllers::find_pill_controller::find_pill_by_id_handler;
-use pills::infrastructure::mongodb_repository::MongoDbPillRepository;
+use pills::infrastructure::persistense::mongodb_repository::MongoDbPillRepository;
 
 use courses::application::command::{AddPillToCourseCommandHandler, CreateCourseCommandHandler};
 use courses::application::query::{
@@ -28,7 +28,7 @@ use courses::infrastructure::controllers::create_course_controller::create_cours
 use courses::infrastructure::controllers::find_all_courses_controller::find_all_courses_handler;
 use courses::infrastructure::controllers::find_course_controller::find_course_by_id_handler;
 use courses::infrastructure::controllers::find_course_with_pills_controller::find_course_with_pills_handler;
-use courses::infrastructure::mongodb_repository::MongoDbCourseRepository;
+use courses::infrastructure::persistence::mongodb_repository::MongoDbCourseRepository;
 
 use database::DatabaseConfig;
 use health::{
