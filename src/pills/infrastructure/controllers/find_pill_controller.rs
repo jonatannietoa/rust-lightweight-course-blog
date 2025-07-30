@@ -8,7 +8,7 @@ use std::sync::Arc;
 use crate::pills::application::{FindPillQuery, FindPillQueryHandler, RepositoryError};
 use crate::pills::domain::PillId;
 
-pub async fn find_pill_by_id_handler(
+pub async fn find_pill_by_id_controller(
     State(handler): State<Arc<FindPillQueryHandler>>,
     Path(id): Path<PillId>,
 ) -> impl IntoResponse {

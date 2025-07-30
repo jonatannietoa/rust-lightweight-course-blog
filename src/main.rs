@@ -14,9 +14,9 @@ use tokio::net::TcpListener;
 use pills::application::command::CreatePillCommandHandler;
 use pills::application::query::{FindAllPillsQueryHandler, FindPillQueryHandler};
 use pills::domain::PillRepository;
-use pills::infrastructure::controllers::create_pill_controller::create_pill_handler;
-use pills::infrastructure::controllers::find_all_pills_controller::find_all_pills_handler;
-use pills::infrastructure::controllers::find_pill_controller::find_pill_by_id_handler;
+use pills::infrastructure::controllers::create_pill_controller::create_pill_controller;
+use pills::infrastructure::controllers::find_all_pills_controller::find_all_pills_controller;
+use pills::infrastructure::controllers::find_pill_controller::find_pill_by_id_controller;
 use pills::infrastructure::persistense::mongodb_repository::MongoDbPillRepository;
 
 use courses::application::command::{AddPillToCourseCommandHandler, CreateCourseCommandHandler};
@@ -111,11 +111,11 @@ async fn main() {
         .route("/health/live", get(liveness_check_handler));
 
     let pills_router = Router::new()
-        .route("/pills", post(create_pill_handler))
+        .route("/pills", post(create_pill_controller))
         .with_state(app_state.create_pill_handler.clone())
-        .route("/pills/:id", get(find_pill_by_id_handler))
+        .route("/pills/:id", get(find_pill_by_id_controller))
         .with_state(app_state.find_pill_handler.clone())
-        .route("/pills", get(find_all_pills_handler))
+        .route("/pills", get(find_all_pills_controller))
         .with_state(app_state.find_all_pills_handler.clone());
 
     let courses_router = Router::new()

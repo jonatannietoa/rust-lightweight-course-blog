@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use crate::pills::application::query::{FindAllPillsQuery, FindAllPillsQueryHandler};
 
-pub async fn find_all_pills_handler(
+pub async fn find_all_pills_controller(
     State(handler): State<Arc<FindAllPillsQueryHandler>>,
 ) -> impl IntoResponse {
     let query = FindAllPillsQuery;

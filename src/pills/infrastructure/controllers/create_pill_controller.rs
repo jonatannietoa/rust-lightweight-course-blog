@@ -14,7 +14,7 @@ pub struct CreatePillRequest {
     content: String,
 }
 
-pub async fn create_pill_handler(
+pub async fn create_pill_controller(
     State(handler): State<Arc<CreatePillCommandHandler>>,
     Json(payload): Json<CreatePillRequest>,
 ) -> impl IntoResponse {
