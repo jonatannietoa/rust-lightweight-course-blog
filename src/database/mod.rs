@@ -17,11 +17,11 @@ impl DatabaseConfig {
     pub async fn new() -> Result<Self, DatabaseError> {
         dotenv::dotenv().ok();
 
-        let database_url =
-            env::var("DATABASE_URL").unwrap_or_else(|_| "mongodb://localhost:27017".to_string());
+        let database_url = env::var("DATABASE_URL")
+            .unwrap_or_else(|_| "mongodb://app_user:app_password@localhost:27017/rust_ddd_pills".to_string());
 
-        let database_name =
-            env::var("DATABASE_NAME").unwrap_or_else(|_| "rust-course-blog".to_string());
+        let database_name = env::var("MONGODB_DATABASE_NAME")
+            .unwrap_or_else(|_| "rust_ddd_pills".to_string());
 
         let mut client_options = ClientOptions::parse(&database_url).await?;
 

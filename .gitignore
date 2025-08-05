@@ -1,3 +1,41 @@
 /target
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Docker volumes and data
+mongodb_data/
+docker-data/
+
+# MongoDB specific
+*.log
+dump/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Test artifacts
+test-results/
+coverage/
 Cargo.lock
 .env
