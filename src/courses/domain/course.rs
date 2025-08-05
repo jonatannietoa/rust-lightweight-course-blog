@@ -5,7 +5,28 @@ use std::str::FromStr;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct CourseId(Uuid);
+#[serde(transparent)]
+pub struct CourseId(#[serde(with = "uuid_as_string")] Uuid);
+
+mod uuid_as_string {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use uuid::Uuid;
+
+    pub fn serialize<S>(uuid: &Uuid, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        uuid.to_string().serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Uuid, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Uuid::parse_str(&s).map_err(serde::de::Error::custom)
+    }
+}
 
 impl CourseId {
     pub fn new() -> Self {
@@ -76,18 +97,42 @@ impl Course {
         hours: i8,
         tags: Vec<String>,
         price: f32,
+        pill_ids: Vec<PillId>,
     ) -> Self {
         Self {
             id,
             title,
             description,
             instructor,
-            pill_ids: Vec::new(),
+            pill_ids,
             difficulty,
             hours,
             tags,
             price,
         }
+    }
+
+    pub fn new(
+        id: CourseId,
+        title: String,
+        description: String,
+        instructor: String,
+        difficulty: Difficulty,
+        hours: i8,
+        tags: Vec<String>,
+        price: f32,
+    ) -> Self {
+        Self::create(
+            id,
+            title,
+            description,
+            instructor,
+            difficulty,
+            hours,
+            tags,
+            price,
+            Vec::new(),
+        )
     }
 
     pub fn id(&self) -> CourseId {

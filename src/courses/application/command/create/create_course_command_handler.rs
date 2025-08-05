@@ -22,7 +22,7 @@ impl CreateCourseCommandHandler {
         }
 
         let course_id = CourseId::new();
-        let course = Course::create(
+        let course = Course::new(
             course_id,
             command.title.clone(),
             command.description,

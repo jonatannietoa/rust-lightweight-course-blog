@@ -4,7 +4,28 @@ use std::str::FromStr;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct PillId(Uuid);
+#[serde(transparent)]
+pub struct PillId(#[serde(with = "uuid_as_string")] Uuid);
+
+mod uuid_as_string {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use uuid::Uuid;
+
+    pub fn serialize<S>(uuid: &Uuid, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        uuid.to_string().serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Uuid, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Uuid::parse_str(&s).map_err(serde::de::Error::custom)
+    }
+}
 
 impl PillId {
     pub fn new() -> Self {
