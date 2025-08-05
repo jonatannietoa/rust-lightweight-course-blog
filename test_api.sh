@@ -146,22 +146,63 @@ make_request "POST" "/courses/$course_id/pills" \
 # Test 11: Get course with pills
 make_request "GET" "/courses/$course_id/pills" "" "🔗 Getting course with all pills"
 
+echo -e "${BLUE}=== Testing Multiple Pills Addition ===${NC}"
+echo ""
+
+# Get the first course ID (the one without pills initially)
+all_courses_response=$(curl -s http://localhost:3000/courses)
+first_course_id=$(echo "$all_courses_response" | jq -r '.[0].id')
+
+echo -e "${YELLOW}Using first course ID for multiple pills test: $first_course_id${NC}"
+echo ""
+
+# Test 12: Add first pill to empty course
+make_request "POST" "/courses/$first_course_id/pills" \
+    "{\"pill_id\": \"$pill1_id\"}" \
+    "➕ Adding first pill to empty course"
+
+# Test 13: Add second pill to same course
+make_request "POST" "/courses/$first_course_id/pills" \
+    "{\"pill_id\": \"$pill2_id\"}" \
+    "➕ Adding second pill to same course"
+
+# Test 14: Add third pill to same course
+make_request "POST" "/courses/$first_course_id/pills" \
+    "{\"pill_id\": \"$pill3_id\"}" \
+    "➕ Adding third pill to same course"
+
+# Test 15: Get course with all added pills
+make_request "GET" "/courses/$first_course_id/pills" "" "🔗 Getting course with all added pills"
+
+# Test 16: Try to add duplicate pill to course
+make_request "POST" "/courses/$first_course_id/pills" \
+    "{\"pill_id\": \"$pill1_id\"}" \
+    "🔄 Trying to add duplicate pill to course"
+
+# Test 17: Verify course still has correct pills after duplicate attempt
+make_request "GET" "/courses/$first_course_id/pills" "" "✅ Verifying course pills after duplicate attempt"
+
 echo -e "${BLUE}=== Testing Error Cases ===${NC}"
 echo ""
 
-# Test 12: Try to get non-existent pill
+# Test 18: Try to get non-existent pill
 fake_id="00000000-0000-0000-0000-000000000000"
 make_request "GET" "/pills/$fake_id" "" "❌ Trying to get non-existent pill"
 
-# Test 13: Try to get non-existent course
+# Test 19: Try to get non-existent course
 make_request "GET" "/courses/$fake_id" "" "❌ Trying to get non-existent course"
 
-# Test 14: Try to add non-existent pill to course
+# Test 20: Try to add non-existent pill to course
 make_request "POST" "/courses/$course_id/pills" \
     "{\"pill_id\": \"$fake_id\"}" \
     "❌ Trying to add non-existent pill to course"
 
-# Test 15: Try to create course with duplicate title
+# Test 21: Try to add pill to non-existent course
+make_request "POST" "/courses/$fake_id/pills" \
+    "{\"pill_id\": \"$pill1_id\"}" \
+    "❌ Trying to add pill to non-existent course"
+
+# Test 22: Try to create course with duplicate title
 make_request "POST" "/courses" \
     '{"title": "Complete Rust Course", "description": "Duplicate title test", "instructor": "Test Instructor", "difficulty": "Advanced", "hours": 15, "tags": ["test"], "price": 49.99}' \
     "❌ Trying to create course with duplicate title"
@@ -169,37 +210,37 @@ make_request "POST" "/courses" \
 echo -e "${BLUE}=== Testing Course Attributes ===${NC}"
 echo ""
 
-# Test 16: Create course with different difficulty levels
+# Test 23: Create course with different difficulty levels
 make_request "POST" "/courses" \
     '{"title": "Expert Rust Patterns", "description": "Advanced design patterns in Rust", "instructor": "Expert Dev", "difficulty": "Expert", "hours": 40, "tags": ["rust", "patterns", "advanced"], "price": 199.99}' \
     "🎯 Creating expert level course"
 
-# Test 17: Create beginner course with minimal hours
+# Test 24: Create beginner course with minimal hours
 make_request "POST" "/courses" \
     '{"title": "Rust Quick Start", "description": "Get started with Rust in 2 hours", "instructor": "Quick Teach", "difficulty": "Beginner", "hours": 2, "tags": ["rust", "quickstart"], "price": 9.99}' \
     "⚡ Creating quick start course"
 
-# Test 18: Create free course
+# Test 25: Create free course
 make_request "POST" "/courses" \
     '{"title": "Rust Community Basics", "description": "Free introduction to Rust", "instructor": "Community", "difficulty": "Beginner", "hours": 5, "tags": ["rust", "free", "community"], "price": 0.0}' \
     "🆓 Creating free course"
 
-# Test 19: Create course with many tags
+# Test 26: Create course with many tags
 make_request "POST" "/courses" \
     '{"title": "Full Stack Rust", "description": "Complete web development with Rust", "instructor": "Full Stack Dev", "difficulty": "Advanced", "hours": 60, "tags": ["rust", "web", "backend", "frontend", "database", "api", "fullstack"], "price": 299.99}' \
     "🏷️ Creating course with multiple tags"
 
-# Test 20: Try invalid difficulty level
+# Test 27: Try invalid difficulty level
 make_request "POST" "/courses" \
     '{"title": "Invalid Course", "description": "Testing invalid difficulty", "instructor": "Test", "difficulty": "SuperExpert", "hours": 10, "tags": ["test"], "price": 50.0}' \
     "❌ Trying invalid difficulty level"
 
-# Test 21: Try negative hours
+# Test 28: Try negative hours
 make_request "POST" "/courses" \
     '{"title": "Negative Hours Course", "description": "Testing negative hours", "instructor": "Test", "difficulty": "Beginner", "hours": -5, "tags": ["test"], "price": 50.0}' \
     "❌ Trying negative hours"
 
-# Test 22: Try negative price
+# Test 29: Try negative price
 make_request "POST" "/courses" \
     '{"title": "Negative Price Course", "description": "Testing negative price", "instructor": "Test", "difficulty": "Beginner", "hours": 10, "tags": ["test"], "price": -25.0}' \
     "❌ Trying negative price"
@@ -211,7 +252,9 @@ echo -e "✅ Pills API: Create, Read operations tested"
 echo -e "✅ Courses API: Create, Read operations tested"
 echo -e "✅ Course Attributes: Difficulty, hours, tags, price tested"
 echo -e "✅ Cross-domain operations: Adding pills to courses tested"
+echo -e "✅ Multiple pills addition: Sequential addition and duplicate handling tested"
 echo -e "✅ Error handling: Invalid IDs, duplicate titles, invalid attributes tested"
+echo -e "✅ Edge cases: Non-existent pills/courses, duplicate pill addition tested"
 echo ""
 echo -e "${YELLOW}Next steps:${NC}"
 echo -e "1. Check server logs for detailed operation traces"
